@@ -23,12 +23,32 @@ const buildSidebar = () => {
 }
 
 const buildContainer = () => {
+    buildTaskForm();
+    buildTaskList();
+     
+}
+
+const buildTaskForm = () => {
     const container = document.getElementById("container");
     const taskForm = document.createElement('form');
     taskForm.setAttribute("id", "task-form");
     taskForm.setAttribute("name", "task-form")
-    taskForm.innerHTML = '<label>Task</label><input></input><label>Description</label><input></input><label>Due Date</label><input type="date"></input><label>Priority</label><select id="priority" name="priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select><label>Complete?</label><select><option>Yes</option><option>No</option></select><button type="submit" for="task-form">Add Task</button>';
+    //taskForm elements below: task, description, due-date, priority, (completed not neccessary for entry)
+    taskForm.innerHTML = `
+    <label for="task">Task</label><input id="task"></input>
+    <label for="description">Description</label><input id="description"></input>
+    <label for"due-date">Due Date</label><input type="date" id="due-date"></input>
+    <label for="priority">Priority</label><select id="priority" name="priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
+    <button type="submit" for="task-form">Add Task</button>`;
 
     container.appendChild(taskForm);
-    
 }
+
+const buildTaskList = () => {
+    const container = document.getElementById("container");
+    const storageLookup = document.createElement("button");
+    storageLookup.setAttribute("id", "storage-lookup");
+    storageLookup.innerHTML = "Storage";
+    container.appendChild(storageLookup);
+}
+
