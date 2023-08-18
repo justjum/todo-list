@@ -14,7 +14,7 @@ module.exports = {
         new HtmlWebpackPlugin({
             title: 'U-do',
             template: './src/index.html',
-            inject: false,
+            //inject: false,
         }),
     ],
     output: {
@@ -27,6 +27,10 @@ module.exports = {
     },
     module: {
         rules: [
+            {
+                test: /\.txt$/, 
+                use: 'raw-loader',
+            },
             {
                 test: /\.css$/i,
                 use: ['style-loader', 'css-loader'],
