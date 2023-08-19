@@ -19,7 +19,22 @@ const buildLayout = () => {
 }
 
 const buildSidebar = () => {
+    const sidebar = document.getElementById("sidebar");
+    const projectList = document.createElement("div");
+    projectList.setAttribute = ("class", "project-list");
+    projectList.setAttribute = ("id", "project-list");
+    sidebar.appendChild(projectList);
+    updateProjectList();
+}
 
+//move this to a "functionality" page rather than build
+const updateProjectList = () => {
+    let currentList = JSON.parse(localStorage.getItem("projectList"));
+    console.table(currentList);
+    currentList.forEach((project) => {
+        console.log(`This is project ${project.id}`);
+        
+    });
 }
 
 const buildContainer = () => {
