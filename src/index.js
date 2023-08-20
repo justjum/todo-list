@@ -1,5 +1,6 @@
 import "./style.css";
 import loadpage from "./page-load";
+import { updateTaskTable, updateProjectList } from "./page-load";
 
 loadpage();
 
@@ -9,6 +10,16 @@ let currentProject = projectList[0].id;
 
 console.log(currentProject);
 
+const loadProjectList = () => {
+    if (projectList === null) {
+        console.log('this');
+        currentProject = new Project(1, 'Default Project');
+        projectList = [currentProject];
+        updateStorage(projectList, "projectList");
+    }
+}
+
+loadProjectList();
 
 const loadProjectCounter =() => {
     projectCounter = localStorage.getItem("projectCounter");
@@ -34,19 +45,7 @@ class Project {
     }
 }
 
-/* let dummyProject1 = new Project(projectCounter, "Default Project");
-let dummyProject2= new Project(projectCounter, "no, name me");
-let dummyProject3 = new Project(projectCounter, "numero threeo");
-console.log(dummyProject1);
-console.log(dummyProject2); 
 
-projectList = [dummyProject1, dummyProject2];
-console.table(projectList);
-projectList.push(dummyProject3);
-console.table(projectList);
-localStorage.setItem("projectList", JSON.stringify(projectList));  */
-
-console.table(projectList);
 
 class Task {
     constructor(projectID, task, description, dueDate, priority, complete) {
@@ -64,19 +63,14 @@ class Task {
 
 // Array to store task objects
 let allTasks = [];
-allTasks = JSON.parse(localStorage.getItem("tasks"));
-console.table(allTasks);
 
-// Dummy tasks for testing
-//myTasks.push(new Task("Eat", "Eat Lunch", "05/05/2023", "medium", false));
-//myTasks.push(new Task("Run", "Get those legs working", "25/05/23", "high", false));
-//let string = JSON.stringify(myTasks);
-//localStorage.setItem("tasks", string);
+console.table(allTasks);
 
 const taskForm = document.getElementById("task-form");
 taskForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    allTasks = JSON.parse(localStorage.getItem("tasks"));
+    checkStorage();
+    
     console.log(e.target[0].value);
     let projectID = currentProject;
     let task = e.target[0].value;
@@ -85,11 +79,23 @@ taskForm.addEventListener('submit', (e) => {
     let priority = e.target[3].value;
     let complete = false;
     allTasks.push(new Task(projectID, task, description, dueDate, priority, complete));
-    console.table(allTasks);
-    let string = JSON.stringify(allTasks);
-    console.log(string);
-    localStorage.setItem("tasks", string);
+    updateStorage(allTasks, "tasks");
+    updateTaskTable(allTasks);
+    updateTaskEventListeners();
 });
+
+const checkStorage = () => {
+    if (localStorage.getItem("tasks") !== "undefined") {
+        allTasks = JSON.parse(localStorage.getItem("tasks"));
+        return;
+    } 
+};
+
+//update localstorage
+const updateStorage = (array, storage) => {
+    let string = JSON.stringify(array);
+    localStorage.setItem(storage, string);
+}
 
 //storage lookup button for testing
 const storageLookup = document.getElementById("storage-lookup");
@@ -97,3 +103,47 @@ storageLookup.addEventListener('click', () => {
     console.table(JSON.parse(localStorage.getItem("tasks")));
 });
 
+
+//edit task function
+
+
+//add event listener new project
+const addProject = document.getElementById("add-project");
+addProject.addEventListener('click', () => {
+    let projectName = prompt('Project name:');
+    projectList.push(new Project(projectCounter, projectName));
+    console.table(projectList);
+    updateStorage(projectList, "projectList");
+    updateProjectList();
+});
+
+//delete project function
+
+
+//edit project function
+
+
+
+
+
+//add event listener delete task
+const updateTaskEventListeners = () => {
+    const deleteButton = document.querySelectorAll(".delete-button");
+    deleteButton.forEach(deleteTask => {
+        deleteTask.addEventListener('click', (e) => {
+            let taskIndex = e.target.id.replace(/[^0-9]/g, "");
+            let remove = allTasks.splice(taskIndex, 1);
+            console.log(`${remove} is gone`);
+            updateStorage(allTasks, "tasks");
+            updateTaskTable(allTasks);
+            e.stopPropagation();
+        });
+    });
+};
+
+checkStorage();
+updateTaskTable(allTasks);
+
+
+export {currentProject};
+export {updateTaskEventListeners};
