@@ -1,5 +1,5 @@
 //import updateProjectList from functionalDOM.js;
-import { updateTaskEventListeners } from "./index";
+import { updateTaskEvents, updateProjectEvents, projectList, currentProject } from "./index";
 
 export default function loadpage() {
      buildLayout();  
@@ -54,14 +54,13 @@ const updateProjectList = () => {
     while (projects.hasChildNodes()) {
         projects.removeChild(projects.firstChild);
     }
-    let currentList = JSON.parse(localStorage.getItem("projectList"));
     const renderProjects = document.createElement('ul');
     renderProjects.setAttribute("class", "render-projects");
-    console.log(renderProjects);   
-    currentList.forEach((project) => {
-        console.log(`This is project ${project.id}`);
+    console.table(projectList);   
+    projectList.forEach((project, x) => {
+        console.log(x);
         let li = document.createElement('li');
-        li.innerHTML = project.name;
+        li.innerHTML = `${project.name} <div class="project-option"><div class="rename-project${x}" id="rename-project${x}">Rename</div><div class="delete-project${x}" id="delete-project${x}">Delete</div></div>`;
         renderProjects.appendChild(li);
     });
     projects.appendChild(renderProjects);

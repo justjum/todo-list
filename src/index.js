@@ -2,37 +2,6 @@ import "./style.css";
 import loadpage from "./page-load";
 import { updateTaskTable, updateProjectList } from "./page-load";
 
-loadpage();
-
-let projectCounter = 0;
-let projectList = JSON.parse(localStorage.getItem("projectList"));
-let currentProject = projectList[0].id;
-
-console.log(currentProject);
-
-const loadProjectList = () => {
-    if (projectList === null) {
-        console.log('this');
-        currentProject = new Project(1, 'Default Project');
-        projectList = [currentProject];
-        updateStorage(projectList, "projectList");
-    }
-}
-
-loadProjectList();
-
-const loadProjectCounter =() => {
-    projectCounter = localStorage.getItem("projectCounter");
-    if (projectCounter === null) {
-        projectCounter = 0;
-    }
-    else if (typeof(projectCounter) === "string") {
-        projectCounter = +projectCounter;
-    }
-    return projectCounter;
-}
-
-loadProjectCounter();
 
 
 class Project {
@@ -59,6 +28,50 @@ class Task {
         
 
 }
+
+
+
+//global variables
+let projectList = [];
+let projectCounter = 0;
+let currentProject = 0;
+
+//update localstorage
+const updateStorage = (array, storage) => {
+    let string = JSON.stringify(array);
+    localStorage.setItem(storage, string);
+}
+
+const loadProjectList = () => {
+    projectList = JSON.parse(localStorage.getItem("projectList"));
+    if (projectList === null) {   
+        console.log('this');
+        projectList = [new Project(1, 'Default Project')];
+        updateStorage(projectList, "projectList");
+    }
+    else {
+        
+        return projectList;
+    }
+}
+
+loadpage();
+
+const loadProjectCounter =() => {
+    projectCounter = localStorage.getItem("projectCounter");
+    if (projectCounter === null) {
+        projectCounter = 0;
+    }
+    else if (typeof(projectCounter) === "string") {
+        projectCounter = +projectCounter;
+    }
+    return projectCounter;
+}
+
+loadProjectCounter();
+loadProjectList();
+
+
 
 
 // Array to store task objects
@@ -91,11 +104,7 @@ const checkStorage = () => {
     } 
 };
 
-//update localstorage
-const updateStorage = (array, storage) => {
-    let string = JSON.stringify(array);
-    localStorage.setItem(storage, string);
-}
+
 
 //storage lookup button for testing
 const storageLookup = document.getElementById("storage-lookup");
@@ -118,16 +127,17 @@ addProject.addEventListener('click', () => {
 });
 
 //delete project function
+const updateProjectEvents = () => {
+    const deleteProject = () => {
+
+    }
+};
 
 
 //edit project function
 
-
-
-
-
 //add event listener delete task
-const updateTaskEventListeners = () => {
+const updateTaskEvents = () => {
     const deleteButton = document.querySelectorAll(".delete-button");
     deleteButton.forEach(deleteTask => {
         deleteTask.addEventListener('click', (e) => {
@@ -141,9 +151,12 @@ const updateTaskEventListeners = () => {
     });
 };
 
+
+
 checkStorage();
 updateTaskTable(allTasks);
+updateProjectList();
 
 
-export {currentProject};
-export {updateTaskEventListeners};
+export {currentProject, projectList};
+export {updateTaskEvents, updateProjectEvents};
