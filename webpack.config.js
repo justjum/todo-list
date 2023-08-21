@@ -36,11 +36,11 @@ module.exports = {
                 use: ['style-loader', 'css-loader'],
             },
             {
-                test: /\.[tiff|jpg|jpeg|svg|png|gif]$/i,
+                test: /\.(tiff|jpg|jpeg|svg|png|gif)$/i,
                 type: 'asset/resource',
             },
             {
-                test: /\.[ttf|woff|woff2]$/i,
+                test: /\.(ttf|woff|woff2)$/i,
                 type: 'asset/resource',
             },
 

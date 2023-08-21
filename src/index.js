@@ -4,6 +4,8 @@ import { updateTaskTable, updateProjectList } from "./page-load";
 
 
 
+
+
 class Project {
     constructor(id, name) {
         this.id = id;
@@ -34,7 +36,7 @@ class Task {
 //global variables
 let projectList = [];
 let projectCounter = 0;
-let currentProject = 0;
+
 
 //update localstorage
 const updateStorage = (array, storage) => {
@@ -54,7 +56,8 @@ const loadProjectList = () => {
         return projectList;
     }
 }
-
+loadProjectList();
+let currentProject = projectList[0].id;
 loadpage();
 
 const loadProjectCounter =() => {
@@ -113,9 +116,6 @@ storageLookup.addEventListener('click', () => {
 });
 
 
-//edit task function
-
-
 //add event listener new project
 const addProject = document.getElementById("add-project");
 addProject.addEventListener('click', () => {
@@ -126,11 +126,31 @@ addProject.addEventListener('click', () => {
     updateProjectList();
 });
 
+//add event listener select project
+
+
+
 //delete project function
 const updateProjectEvents = () => {
-    const deleteProject = () => {
+    const deleteProject = document.querySelectorAll(".delete-project");
+    deleteProject.forEach(delProj => {
+        delProj.addEventListener('click', (e) => {
+            let projIndex = e.target.id.replace(/[^0-9]/g, "");
+            let remove = projectList.splice(projIndex, 1);
+            console.log(`${remove} is gone`);
+            updateStorage(projectList, "projectList");
+            updateProjectList();
+        })
+    })
 
-    }
+    const selectProject = document.querySelectorAll(".project-check");
+    selectProject.forEach(selProj => {
+        selProj.addEventListener('click', (e) => {
+            let projIndex = e.target.id.replace(/[0-9]/g, "");
+            currentProject = projIndex;
+            updateProjectList();
+        })
+    })
 };
 
 
@@ -150,7 +170,6 @@ const updateTaskEvents = () => {
         });
     });
 };
-
 
 
 checkStorage();

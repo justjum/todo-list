@@ -21,3 +21,7 @@ form {
     display: grid;
     grid-template-columns: 1fr 1fr;
 }
+
+li img {
+    width: 30px;
+}

@@ -1,5 +1,10 @@
 //import updateProjectList from functionalDOM.js;
 import { updateTaskEvents, updateProjectEvents, projectList, currentProject } from "./index";
+import CheckCircleOutline from "./Images/check-circle-outline.svg"
+import CircleEditOutline from "./Images/circle-edit-outline.svg"
+import CircleOutline from "./Images/circle-outline.svg"
+import DeleteCircleOutline from "./Images/delete-circle-outline.svg"
+import DotsVertical from "./Images/dots-vertical.svg"
 
 export default function loadpage() {
      buildLayout();  
@@ -44,8 +49,7 @@ const buildSidebar = () => {
     sidebar.appendChild(projectHeading);
     sidebar.appendChild(projectAdd);
     projectAdd.appendChild(addButton);
-    sidebar.appendChild(projectList);
-    updateProjectList();
+    sidebar.appendChild(projectList);    
 }
 
 //move this to a "functionality" page rather than build
@@ -58,13 +62,17 @@ const updateProjectList = () => {
     renderProjects.setAttribute("class", "render-projects");
     console.table(projectList);   
     projectList.forEach((project, x) => {
-        console.log(x);
         let li = document.createElement('li');
-        li.innerHTML = `${project.name} <div class="project-option"><div class="rename-project${x}" id="rename-project${x}">Rename</div><div class="delete-project${x}" id="delete-project${x}">Delete</div></div>`;
+        if (project.id === currentProject) {
+            li.innerHTML = `<img class="project-check active ${project.id}" src=${CheckCircleOutline}></img><div>${project.name}</div> <div class="project-option active ${x}"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
+        }
+        else {
+            li.innerHTML = `<img class="project-check inactive ${project.id}" src=${CircleOutline}><div>${project.name}</div> <div class="project-option inactive"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
+        }
         renderProjects.appendChild(li);
     });
     projects.appendChild(renderProjects);
-    
+    updateProjectEvents();
 }
 
 const buildContainer = () => {
@@ -139,6 +147,6 @@ const updateTaskTable = (allTasks) => {
             `;
         tableBody.appendChild(row);
     };
-    updateTaskEventListeners();
+    updateTaskEvents();
 };
 
