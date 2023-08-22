@@ -3,9 +3,6 @@ import loadpage from "./page-load";
 import { updateTaskTable, updateProjectList } from "./page-load";
 
 
-
-
-
 class Project {
     constructor(id, name) {
         this.id = id;
@@ -15,8 +12,6 @@ class Project {
         localStorage.setItem("projectCounter", projectCounter);
     }
 }
-
-
 
 class Task {
     constructor(projectID, task, description, dueDate, priority, complete) {
@@ -31,8 +26,6 @@ class Task {
 
 }
 
-
-
 //global variables
 let projectList = [];
 let projectCounter = 0;
@@ -46,13 +39,14 @@ const updateStorage = (array, storage) => {
 
 const loadProjectList = () => {
     projectList = JSON.parse(localStorage.getItem("projectList"));
-    if (projectList === null) {   
+    console.log(projectList);
+    if (projectList.length === 0) {   
         console.log('this');
-        projectList = [new Project(1, 'Default Project')];
+        projectList = [new Project(projectCounter, 'Default Project')];
         updateStorage(projectList, "projectList");
     }
     else {
-        
+        console.log("that");
         return projectList;
     }
 }
@@ -62,6 +56,7 @@ loadpage();
 
 const loadProjectCounter =() => {
     projectCounter = localStorage.getItem("projectCounter");
+    console.log(projectCounter);
     if (projectCounter === null) {
         projectCounter = 0;
     }
@@ -82,6 +77,7 @@ let allTasks = [];
 
 console.table(allTasks);
 
+// add task pop-up form
 const taskForm = document.getElementById("task-form");
 taskForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -97,7 +93,8 @@ taskForm.addEventListener('submit', (e) => {
     allTasks.push(new Task(projectID, task, description, dueDate, priority, complete));
     updateStorage(allTasks, "tasks");
     updateTaskTable(allTasks);
-    updateTaskEventListeners();
+    updateTaskEvents();
+    switchTaskForm();
 });
 
 const checkStorage = () => {
@@ -109,11 +106,12 @@ const checkStorage = () => {
 
 
 
+
 //storage lookup button for testing
-const storageLookup = document.getElementById("storage-lookup");
+/* const storageLookup = document.getElementById("storage-lookup");
 storageLookup.addEventListener('click', () => {
     console.table(JSON.parse(localStorage.getItem("tasks")));
-});
+}); */
 
 
 //add event listener new project
@@ -146,18 +144,25 @@ const updateProjectEvents = () => {
     const selectProject = document.querySelectorAll(".project-check");
     selectProject.forEach(selProj => {
         selProj.addEventListener('click', (e) => {
-            let projIndex = e.target.id.replace(/[0-9]/g, "");
-            currentProject = projIndex;
+            let projIndex = e.target.id.replace(/[^0-9]/g, "");
+            currentProject = +projIndex;
             updateProjectList();
+            updateTaskTable(allTasks);
         })
     })
 };
 
 
-//edit project function
+//rename project function
 
 //add event listener delete task
 const updateTaskEvents = () => {
+    const addTaskButton = document.getElementById("add-task")
+    
+    addTaskButton.addEventListener('click', () => {
+        switchTaskForm();
+    });
+
     const deleteButton = document.querySelectorAll(".delete-button");
     deleteButton.forEach(deleteTask => {
         deleteTask.addEventListener('click', (e) => {
@@ -169,6 +174,17 @@ const updateTaskEvents = () => {
             e.stopPropagation();
         });
     });
+};
+
+// switch taskForm display
+const switchTaskForm = () => {
+    const taskForm = document.getElementById("task-form");
+    if (taskForm.style.display ==="grid") {
+        taskForm.style.display = "none";
+    }
+    else {
+        taskForm.style.display = "grid";
+    }
 };
 
 

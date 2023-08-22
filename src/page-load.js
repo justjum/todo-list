@@ -64,10 +64,10 @@ const updateProjectList = () => {
     projectList.forEach((project, x) => {
         let li = document.createElement('li');
         if (project.id === currentProject) {
-            li.innerHTML = `<img class="project-check active ${project.id}" src=${CheckCircleOutline}></img><div>${project.name}</div> <div class="project-option active ${x}"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
+            li.innerHTML = `<img class="project-check active" id="project-check${project.id}" src=${CheckCircleOutline}></img><div>${project.name}</div> <div class="project-option active ${x}"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
         }
         else {
-            li.innerHTML = `<img class="project-check inactive ${project.id}" src=${CircleOutline}><div>${project.name}</div> <div class="project-option inactive"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
+            li.innerHTML = `<img class="project-check inactive" id="project-check${project.id}" src=${CircleOutline}><div>${project.name}</div> <div class="project-option inactive"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
         }
         renderProjects.appendChild(li);
     });
@@ -86,6 +86,8 @@ const buildTaskForm = () => {
     const taskForm = document.createElement('form');
     taskForm.setAttribute("id", "task-form");
     taskForm.setAttribute("name", "task-form")
+    taskForm.setAttribute("class", "task-form");
+    taskForm.style.display = "none";
     //taskForm elements below: task, description, due-date, priority, ("completed" not neccessary for entry)
     taskForm.innerHTML = `
     <label for="task">Task</label><input id="task"></input>
@@ -99,13 +101,13 @@ const buildTaskForm = () => {
 
 const buildTaskList = () => {
     const container = document.getElementById("container");
-    const storageLookup = document.createElement("button");
+    const addTask = document.createElement("button");
     const taskList = document.createElement("div");
     taskList.setAttribute("class", "task-list");
     taskList.setAttribute("id", "task-list");
-    storageLookup.setAttribute("id", "storage-lookup");
-    storageLookup.innerHTML = "Storage";
-    container.appendChild(storageLookup);
+    addTask.setAttribute("id", "add-task");
+    addTask.innerHTML = "Add Task";
+    container.appendChild(addTask);
     container.appendChild(taskList);
     const taskTable = document.createElement("table");
     taskTable.setAttribute("id", "task-table");
@@ -133,19 +135,24 @@ const updateTaskTable = (allTasks) => {
     while (tableBody.hasChildNodes()) {  
         tableBody.removeChild(tableBody.firstChild);
     };  
+    console.log(typeof(currentProject));
+    console.table(typeof(allTasks[0].projectID));
 
     for (let x = 0; x < allTasks.length; x++) {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${allTasks[x].task}</td>
-            <td>${allTasks[x].description}</td>
-            <td>${allTasks[x].dueDate}</td>
-            <td>${allTasks[x].priority}</td>
-            <td>${allTasks[x].complete}</td>
-            <td><div class="delete-button" id="delete${x}">Delete</div></td>
-            <td><div class="edit-button" id="edit${x}">Edit</div></td>
-            `;
-        tableBody.appendChild(row);
+        if (currentProject === allTasks[x].projectID || currentProject === projectList[0].id) {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+                <td>${allTasks[x].task}</td>
+                <td>${allTasks[x].description}</td>
+                <td>${allTasks[x].dueDate}</td>
+                <td>${allTasks[x].priority}</td>
+                <td>${allTasks[x].complete}</td>
+                <td><div class="delete-button" id="delete${x}">Delete</div></td>
+                <td><div class="edit-button" id="edit${x}">Edit</div></td>
+                `;
+            tableBody.appendChild(row);
+        }
+        
     };
     updateTaskEvents();
 };
