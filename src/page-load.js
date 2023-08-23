@@ -162,7 +162,7 @@ const updateTaskTable = (allTasks, dateCutOff, sortPriority) => {
             const row = document.createElement("tr");
             let date = format(parseISO(allTasks[x].dueDate), "yyyy-MM-dd");
             let complete = `<img src="${CircleOutline}" class="complete-button" id="complete-button${x}">`;
-            switch (allTasks[x].complete){
+            switch (allTasks[x].complete) {
                 case true: complete = `<img src="${CheckCircleOutline}" class="complete-button" id="complete-button${x}">`; break;
                 //case false: complete = `<img src="${CircleOutline}"`; break;
             }
