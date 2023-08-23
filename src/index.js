@@ -1,6 +1,9 @@
 import "./style.css";
 import loadpage from "./page-load";
 import { updateTaskTable, updateProjectList } from "./page-load";
+import { compareAsc, format, parseISO, addDays } from "date-fns";
+import CircleOutline from "./Images/circle-outline.svg";
+import CheckCircleOutline from "./Images/check-circle-outline.svg"
 
 
 class Project {
@@ -29,7 +32,18 @@ class Task {
 //global variables
 let projectList = [];
 let projectCounter = 0;
+let sortThreeDays = false;
+let sortWeek = false;
+let sortPriority = false;
+let daysToAdd = 10000;
+let dateCutOff = 0;
 
+const calcDateCut = () => {
+    dateCutOff = addDays(new Date(), daysToAdd);
+}
+
+calcDateCut();
+console.log(dateCutOff)
 
 //update localstorage
 const updateStorage = (array, storage) => {
@@ -39,24 +53,21 @@ const updateStorage = (array, storage) => {
 
 const loadProjectList = () => {
     projectList = JSON.parse(localStorage.getItem("projectList"));
-    console.log(projectList);
     if (projectList.length === 0) {   
-        console.log('this');
-        projectList = [new Project(projectCounter, 'Default Project')];
+        projectList = [];
         updateStorage(projectList, "projectList");
     }
     else {
-        console.log("that");
         return projectList;
     }
 }
+
 loadProjectList();
-let currentProject = projectList[0].id;
+let currentProject = 0;
 loadpage();
 
 const loadProjectCounter =() => {
     projectCounter = localStorage.getItem("projectCounter");
-    console.log(projectCounter);
     if (projectCounter === null) {
         projectCounter = 0;
     }
@@ -75,7 +86,6 @@ loadProjectList();
 // Array to store task objects
 let allTasks = [];
 
-console.table(allTasks);
 
 // add task pop-up form
 const taskForm = document.getElementById("task-form");
@@ -83,7 +93,6 @@ taskForm.addEventListener('submit', (e) => {
     e.preventDefault();
     checkStorage();
     
-    console.log(e.target[0].value);
     let projectID = currentProject;
     let task = e.target[0].value;
     let description = e.target[1].value;
@@ -92,10 +101,22 @@ taskForm.addEventListener('submit', (e) => {
     let complete = false;
     allTasks.push(new Task(projectID, task, description, dueDate, priority, complete));
     updateStorage(allTasks, "tasks");
-    updateTaskTable(allTasks);
+    updateTaskTable(allTasks, dateCutOff);
     updateTaskEvents();
-    switchTaskForm();
+    switchButton('task-form');
 });
+
+const removeTasks = (projectID) => {
+    for (let x = 0; x < allTasks.length; x++) {
+        if (allTasks[x].projectID === projectID) {
+            let remove = allTasks.splice(x, 1);
+            console.log(`${remove} is gone`);
+            updateStorage(allTasks, "tasks");
+            console.table(allTasks);
+            updateTaskTable(allTasks);
+        }
+    }
+}
 
 const checkStorage = () => {
     if (localStorage.getItem("tasks") !== "undefined") {
@@ -121,7 +142,7 @@ addProject.addEventListener('click', () => {
     projectList.push(new Project(projectCounter, projectName));
     console.table(projectList);
     updateStorage(projectList, "projectList");
-    updateProjectList();
+    updateProjectList(projectList);
 });
 
 //add event listener select project
@@ -134,34 +155,107 @@ const updateProjectEvents = () => {
     deleteProject.forEach(delProj => {
         delProj.addEventListener('click', (e) => {
             let projIndex = e.target.id.replace(/[^0-9]/g, "");
+            let projectID = projectList[projIndex].id;
+            removeTasks(projectID);
             let remove = projectList.splice(projIndex, 1);
             console.log(`${remove} is gone`);
             updateStorage(projectList, "projectList");
-            updateProjectList();
+            updateProjectList(projectList);
         })
     })
 
     const selectProject = document.querySelectorAll(".project-check");
+    const defaultCheck = document.getElementById("default-check")
     selectProject.forEach(selProj => {
         selProj.addEventListener('click', (e) => {
             let projIndex = e.target.id.replace(/[^0-9]/g, "");
+            if (projIndex !== 0) {
+                defaultCheck.setAttribute('src', `${CircleOutline}`)
+            }
+            else if (+projIndex === 0) {
+                
+            }
             currentProject = +projIndex;
-            updateProjectList();
-            updateTaskTable(allTasks);
+            console.log(currentProject);
+            updateProjectList(projectList);
+            updateTaskTable(allTasks, dateCutOff, sortPriority);
         })
     })
 };
 
 
-//rename project function
+const sortThree = () => {
+    sortThreeDays = !sortThreeDays;
+    sortWeek = false;
+    switch(sortThreeDays) {
+        case true: daysToAdd = 3; break;
+        case false: daysToAdd = 10000; break;
+    }
+    calcDateCut();
+}
 
-//add event listener delete task
-const updateTaskEvents = () => {
+const sortSeven = () => {
+    sortWeek = !sortWeek;
+    sortThreeDays = false;
+    switch(sortWeek) {
+        case true: daysToAdd = 7; break;
+        case false: daysToAdd = 10000; break;
+    }
+    calcDateCut();
+    
+}
+
+const sortHighPriority = () => {
+    sortPriority = !sortPriority;
+}
+
+const updateSortIcons = () => {
+    let checked = CheckCircleOutline;
+    let unchecked = CircleOutline;
+    sortThreeDays === true ? document.getElementById("sort-three").setAttribute("src", `${checked}`) : document.getElementById("sort-three").setAttribute("src", `${unchecked}`);
+    sortWeek === true ? document.getElementById("sort-seven").setAttribute("src", `${checked}`) : document.getElementById("sort-seven").setAttribute("src", `${unchecked}`);
+    sortPriority === true ? document.getElementById("sort-priority").setAttribute("src", `${checked}`) : document.getElementById("sort-priority").setAttribute("src", `${unchecked}`);
+};
+
+//add event listener sort tasks
+const updateSortEvents = () => {
+    const sortTask = document.querySelectorAll(".sort-tasks")
+    sortTask.forEach(filter => {
+        filter.addEventListener('click', (e) =>{
+            console.log(e.target.id);
+            switch(e.target.id) {
+                case "sort-three": sortThree(); break;
+                case "sort-seven": sortSeven(); break;
+                case "sort-priority": sortHighPriority(); break;
+            }
+            updateSortIcons();
+            updateTaskTable(allTasks, dateCutOff, sortPriority);
+        });
+    });
+}
+
+
+//add event listner add task
+const addTask = () => {
     const addTaskButton = document.getElementById("add-task")
     
     addTaskButton.addEventListener('click', () => {
-        switchTaskForm();
+        switchButton("task-form");
     });
+}
+
+
+//add event listener delete task
+const updateTaskEvents = () => {
+    const selectTaskButton = document.querySelectorAll(".task-selection");
+    selectTaskButton.forEach(selectTask => {
+        selectTask.addEventListener('click', (e) => {
+            console.log(e);
+            let taskIndex = e.target.id.replace(/[^0-9]/g, "");
+            console.log(taskIndex);
+            switchButton(`task-select${taskIndex}`);
+        })
+    })
 
     const deleteButton = document.querySelectorAll(".delete-button");
     deleteButton.forEach(deleteTask => {
@@ -170,6 +264,7 @@ const updateTaskEvents = () => {
             let remove = allTasks.splice(taskIndex, 1);
             console.log(`${remove} is gone`);
             updateStorage(allTasks, "tasks");
+            console.table(allTasks);
             updateTaskTable(allTasks);
             e.stopPropagation();
         });
@@ -177,21 +272,59 @@ const updateTaskEvents = () => {
 };
 
 // switch taskForm display
-const switchTaskForm = () => {
-    const taskForm = document.getElementById("task-form");
-    if (taskForm.style.display ==="grid") {
-        taskForm.style.display = "none";
+const switchButton = (switchButton) => {
+    console.log(switchButton);
+    const switchView = document.getElementById(switchButton);
+    if (switchView.style.display === "grid") {
+        switchView.style.display = "none";
     }
-    else {
-        taskForm.style.display = "grid";
+    else if (switchView.style.display === "none") {
+        switchView.style.display = "grid";
     }
 };
 
+// function to sort tasks by date
+const sortDate = () => {
+    const taskTable = document.getElementById("task-table");
+    let switching = true;
+    let shouldSwitch = false;
+    let x;
+    let y;
+    let i = 1;
+    while (switching) {
+        switching = false;
+        let rows = taskTable.rows;
+        for (i = 1; i < (rows.length-1); i++) {
+            shouldSwitch = false;
+            x = rows[i].getElementsByTagName("td")[2].innerHTML;
+            y = rows[i+1].getElementsByTagName("td")[2].innerHTML;
+            if (compareAsc(parseISO(x), parseISO(y)) === 1) {
+                shouldSwitch = true;
+                break;
+            };
+
+        };
+        if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i+1], rows[i]);
+            switching = true;
+        };
+
+
+
+    };
+
+};
+
+
+// function to filter tasks (by priority, three days, project, etc)
+
 
 checkStorage();
+console.table(projectList);
+addTask();
+updateProjectList(projectList);
 updateTaskTable(allTasks);
-updateProjectList();
-
+updateSortEvents();
 
 export {currentProject, projectList};
-export {updateTaskEvents, updateProjectEvents};
+export {updateTaskEvents, updateProjectEvents, sortDate};

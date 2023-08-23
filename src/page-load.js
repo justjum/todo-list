@@ -1,10 +1,11 @@
 //import updateProjectList from functionalDOM.js;
-import { updateTaskEvents, updateProjectEvents, projectList, currentProject } from "./index";
+import { updateTaskEvents, updateProjectEvents, projectList, currentProject, sortDate, dateCutOff } from "./index";
 import CheckCircleOutline from "./Images/check-circle-outline.svg"
 import CircleEditOutline from "./Images/circle-edit-outline.svg"
 import CircleOutline from "./Images/circle-outline.svg"
 import DeleteCircleOutline from "./Images/delete-circle-outline.svg"
 import DotsVertical from "./Images/dots-vertical.svg"
+import { compareAsc, format, parseISO } from "date-fns";
 
 export default function loadpage() {
      buildLayout();  
@@ -30,10 +31,24 @@ const buildLayout = () => {
 
 const buildSidebar = () => {
     const sidebar = document.getElementById("sidebar");
-    const projectHeading = document.createElement("div");
+    const sortOptions = document.createElement("div");
+    sortOptions.setAttribute("class", "sort-options")
+    sortOptions.innerHTML = `
+        <h2>Sorting</h2>
+        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-three"></div><h3>Upcoming 3 Days</h3>
+        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-seven"></div><h3>Upcoming Week</h3>
+        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-priority"></div><h3>High Priority</h3>`
+    const projOptions = document.createElement("div");
+    projOptions.setAttribute("class", "project-options")
+    const projectHeading = document.createElement("h2");
     projectHeading.setAttribute("class", "project-heading");
     projectHeading.setAttribute("id", "project-heading");
     projectHeading.innerHTML = "Projects";
+    const defaultProject = document.createElement('div');
+    defaultProject.setAttribute("class", "project-check default");
+    defaultProject.setAttribute("id", "project-check0");
+    defaultProject.innerHTML = `
+        <img src="${CheckCircleOutline}" id="default-check"> <h3>All Tasks</h3>`;
     const projectAdd = document.createElement('div');
     projectAdd.setAttribute("class", "project-add");
     projectAdd.setAttribute("id", "project-add");
@@ -45,22 +60,31 @@ const buildSidebar = () => {
     const projectList = document.createElement("div");
     projectList.setAttribute("class", "project-list");
     projectList.setAttribute("id", "project-list");
-    console.log(projectList);
-    sidebar.appendChild(projectHeading);
-    sidebar.appendChild(projectAdd);
+    sidebar.appendChild(sortOptions);
+    projOptions.appendChild(projectHeading);
+    projOptions.appendChild(defaultProject);
+    projOptions.appendChild(projectList);
+    projOptions.appendChild(projectAdd);
     projectAdd.appendChild(addButton);
-    sidebar.appendChild(projectList);    
+    sidebar.appendChild(projOptions);    
 }
 
 //move this to a "functionality" page rather than build
-const updateProjectList = () => {
+const updateProjectList = (projectList) => {
+    if (projectList.length === 0) {
+        return;
+    }
+
+    if (currentProject === 0) {
+        const defaultCheck = document.getElementById("default-check");
+        defaultCheck.setAttribute('src', `${CheckCircleOutline}`);
+    }
     const projects = document.getElementById("project-list");
     while (projects.hasChildNodes()) {
         projects.removeChild(projects.firstChild);
     }
     const renderProjects = document.createElement('ul');
-    renderProjects.setAttribute("class", "render-projects");
-    console.table(projectList);   
+    renderProjects.setAttribute("class", "render-projects");  
     projectList.forEach((project, x) => {
         let li = document.createElement('li');
         if (project.id === currentProject) {
@@ -92,7 +116,7 @@ const buildTaskForm = () => {
     taskForm.innerHTML = `
     <label for="task">Task</label><input id="task"></input>
     <label for="description">Description</label><input id="description"></input>
-    <label for"due-date">Due Date</label><input type="date" id="due-date"></input>
+    <label for="due-date">Due Date</label><input type="date" id="due-date"></input>
     <label for="priority">Priority</label><select id="priority" name="priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
     <button type="submit" for="task-form">Add Task</button>`;
 
@@ -119,8 +143,6 @@ const buildTaskList = () => {
             <th>Date Due</th>
             <th>Priority</th>
             <th>Complete?</th>
-            <th>Edit</th>
-            <th>Delete</th>
         </tr>
         </thead>`;
         container.appendChild(taskTable);
@@ -130,30 +152,44 @@ const buildTaskList = () => {
     taskTable.appendChild(tableBody);
 }
 
-const updateTaskTable = (allTasks) => {
+const updateTaskTable = (allTasks, dateCutOff, sortPriority) => {
     const tableBody = document.getElementById("table-body");
     while (tableBody.hasChildNodes()) {  
         tableBody.removeChild(tableBody.firstChild);
     };  
-    console.log(typeof(currentProject));
-    console.table(typeof(allTasks[0].projectID));
-
     for (let x = 0; x < allTasks.length; x++) {
-        if (currentProject === allTasks[x].projectID || currentProject === projectList[0].id) {
+        if (currentProject === allTasks[x].projectID  || currentProject === 0) {
             const row = document.createElement("tr");
-            row.innerHTML = `
+            let date = format(parseISO(allTasks[x].dueDate), "yyyy-MM-dd");
+            let complete = `<img src="${CircleOutline}" class="complete-button" id="complete-button${x}">`;
+            switch (allTasks[x].complete){
+                case true: complete = `<img src="${CheckCircleOutline}" class="complete-button" id="complete-button${x}">`; break;
+                //case false: complete = `<img src="${CircleOutline}"`; break;
+            }
+
+            if (compareAsc(parseISO(allTasks[x].dueDate), dateCutOff) === 1) {
+                
+            }
+            else if (sortPriority === true && allTasks[x].priority !== "high") {
+
+            }
+            else {
+                row.innerHTML = `
                 <td>${allTasks[x].task}</td>
                 <td>${allTasks[x].description}</td>
-                <td>${allTasks[x].dueDate}</td>
+                <td>${date}</td>
                 <td>${allTasks[x].priority}</td>
-                <td>${allTasks[x].complete}</td>
-                <td><div class="delete-button" id="delete${x}">Delete</div></td>
-                <td><div class="edit-button" id="edit${x}">Edit</div></td>
+                <td>${complete}</td>
+                <td><div><img src="${DotsVertical}" class="task-selection" id="task-selection${x}"><div class="task-select" id="task-select${x}" style="display:none"><div class="edit-button" id="edit${x}"><img src=${CircleEditOutline}></div><div class="delete-button" id="delete${x}"><img src=${DeleteCircleOutline}></div></div></div></td>
                 `;
             tableBody.appendChild(row);
+            }
+
         }
+        sortDate();
         
     };
     updateTaskEvents();
-};
 
+    
+};
