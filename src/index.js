@@ -10,20 +10,19 @@ class Project {
     constructor(id, name) {
         this.id = id;
         this.name = name;
-        this.taskArray = 'tasks' + +projectCounter;
         projectCounter += 1;
         localStorage.setItem("projectCounter", projectCounter);
     }
 }
 
 class Task {
-    constructor(projectID, task, description, dueDate, priority, complete) {
+    constructor(projectID, task, description, dueDate, priority) {
         this.projectID = projectID;
         this.task = task;
         this.description = description;
         this.dueDate = dueDate;
         this.priority = priority;
-        this.complete = complete;
+        this.complete = false;
     }
         
 
@@ -37,6 +36,7 @@ let sortWeek = false;
 let sortPriority = false;
 let daysToAdd = 10000;
 let dateCutOff = 0;
+let today = format(new Date(), "yyyy-MM-dd");
 
 const calcDateCut = () => {
     dateCutOff = addDays(new Date(), daysToAdd);
@@ -77,6 +77,8 @@ const loadProjectCounter =() => {
     return projectCounter;
 }
 
+
+
 loadProjectCounter();
 loadProjectList();
 
@@ -86,13 +88,20 @@ loadProjectList();
 // Array to store task objects
 let allTasks = [];
 
+// Shortcut to reset task array
+//updateStorage(allTasks, 'tasks');
+
+const grayout = (displayType) => {
+    const grayout = document.getElementById("grayout");
+    console.log(grayout);
+    grayout.setAttribute("style", `${displayType}`);
+}
 
 // add task pop-up form
 const taskForm = document.getElementById("task-form");
 taskForm.addEventListener('submit', (e) => {
     e.preventDefault();
     checkStorage();
-    
     let projectID = currentProject;
     let task = e.target[0].value;
     let description = e.target[1].value;
@@ -103,19 +112,52 @@ taskForm.addEventListener('submit', (e) => {
     updateStorage(allTasks, "tasks");
     updateTaskTable(allTasks, dateCutOff);
     updateTaskEvents();
+    grayout('display: none');
     switchButton('task-form');
 });
 
+// add project pop-up form
+const projectForm = document.getElementById("project-form");
+projectForm.addEventListener("submit", (e) => {
+    let projectName = e.target[0].value;
+    console.log(projectName);
+    currentProject = projectCounter;
+    projectList.push(new Project(projectCounter, projectName));
+    updateStorage(projectList, "projectList");
+    updateProjectList(projectList);
+    grayout();
+})
+
+// rename project pop-up form
+const projectRename = (projIndex) => {
+    const rename = document.getElementById(`project-new-name${projIndex}`)
+    rename.setAttribute("style", "display: block");
+    rename.addEventListener('keypress', (e) => {
+        if (e.key === "Enter") {
+            let newName = rename.value;
+            projectList[projIndex].name = newName;
+            updateStorage(projectList, "projectList");
+            updateProjectList(projectList);
+        }
+
+    })
+
+};
+
+
 const removeTasks = (projectID) => {
     for (let x = 0; x < allTasks.length; x++) {
+        console.log(x);
         if (allTasks[x].projectID === projectID) {
             let remove = allTasks.splice(x, 1);
-            console.log(`${remove} is gone`);
-            updateStorage(allTasks, "tasks");
-            console.table(allTasks);
-            updateTaskTable(allTasks);
+            console.log(x);
+            x -= 1;
         }
     }
+    currentProject = 0;
+    updateStorage(allTasks, "tasks");
+    console.table(allTasks);
+    updateTaskTable(allTasks);
 }
 
 const checkStorage = () => {
@@ -138,50 +180,61 @@ storageLookup.addEventListener('click', () => {
 //add event listener new project
 const addProject = document.getElementById("add-project");
 addProject.addEventListener('click', () => {
-    let projectName = prompt('Project name:');
-    projectList.push(new Project(projectCounter, projectName));
-    console.table(projectList);
-    updateStorage(projectList, "projectList");
-    updateProjectList(projectList);
+    grayout();
+    switchButton("project-form");
 });
 
-//add event listener select project
+
 
 
 
 //delete project function
-const updateProjectEvents = () => {
+function updateProjectEvents() {
+
+    const selectProject = document.querySelectorAll(".project-check");
+    const defaultCheck = document.getElementById("default-check");
+    selectProject.forEach(selProj => {
+        selProj.addEventListener('click', (e) => {
+            let projID = e.currentTarget.id.replace(/[^0-9]/g, "");
+            let projIndex = e.currentTarget.className.replace(/[^0-9]/g, "");
+            console.log(e.currentTarget.className);
+            if (+projID === 0) {
+                updateTaskHeading("All Tasks");
+            }
+            else {
+                defaultCheck.setAttribute('src', `${CircleOutline}`);
+                updateTaskHeading(projectList[projIndex].name)
+            }
+
+            currentProject = +projID;
+            updateProjectList(projectList);
+            updateTaskTable(allTasks, dateCutOff, sortPriority);
+        });
+    });
+
+    const renameProject = document.querySelectorAll(".rename-project");
+    renameProject.forEach(renameProj => {
+        renameProj.addEventListener('click', (e) => {
+            let projIndex = e.currentTarget.id.replace(/[^0-9]/g, "");
+            let projectID = projectList[projIndex].id;
+            projectRename(projIndex, projectID);
+        });
+    });
+
     const deleteProject = document.querySelectorAll(".delete-project");
     deleteProject.forEach(delProj => {
         delProj.addEventListener('click', (e) => {
-            let projIndex = e.target.id.replace(/[^0-9]/g, "");
+            let projIndex = e.currentTarget.id.replace(/[^0-9]/g, "");
             let projectID = projectList[projIndex].id;
             removeTasks(projectID);
-            let remove = projectList.splice(projIndex, 1);
-            console.log(`${remove} is gone`);
+            projectList.splice(projIndex, 1);
             updateStorage(projectList, "projectList");
             updateProjectList(projectList);
-        })
-    })
+        });
+    });
 
-    const selectProject = document.querySelectorAll(".project-check");
-    const defaultCheck = document.getElementById("default-check")
-    selectProject.forEach(selProj => {
-        selProj.addEventListener('click', (e) => {
-            let projIndex = e.target.id.replace(/[^0-9]/g, "");
-            if (projIndex !== 0) {
-                defaultCheck.setAttribute('src', `${CircleOutline}`)
-            }
-            else if (+projIndex === 0) {
-                
-            }
-            currentProject = +projIndex;
-            console.log(currentProject);
-            updateProjectList(projectList);
-            updateTaskTable(allTasks, dateCutOff, sortPriority);
-        })
-    })
-};
+}
+
 
 
 const sortThree = () => {
@@ -240,29 +293,36 @@ const addTask = () => {
     const addTaskButton = document.getElementById("add-task")
     
     addTaskButton.addEventListener('click', () => {
+        grayout('display: inline');
         switchButton("task-form");
     });
 }
 
+const updateTaskHeading = (heading) => {
+    console.log(heading);
+    let taskHeading = document.getElementById("task-heading");
+    taskHeading.innerText = heading;
+
+};
 
 //add event listener delete task
 const updateTaskEvents = () => {
-    const selectTaskButton = document.querySelectorAll(".task-selection");
-    selectTaskButton.forEach(selectTask => {
-        selectTask.addEventListener('click', (e) => {
-            console.log(e);
+    const completeTask = document.querySelectorAll(".complete-button");
+    completeTask.forEach(finishedTask => {
+        finishedTask.addEventListener('click', (e) => {
             let taskIndex = e.target.id.replace(/[^0-9]/g, "");
-            console.log(taskIndex);
-            switchButton(`task-select${taskIndex}`);
+            allTasks[taskIndex].complete = !allTasks[taskIndex].complete;
+            updateStorage(allTasks, "tasks");
+            updateTaskTable(allTasks);
+            //finishedTask.setAttribute("src", `${CheckCircleOutline}`)
         })
     })
 
     const deleteButton = document.querySelectorAll(".delete-button");
     deleteButton.forEach(deleteTask => {
         deleteTask.addEventListener('click', (e) => {
-            let taskIndex = e.target.id.replace(/[^0-9]/g, "");
+            let taskIndex = e.currentTarget.id.replace(/[^0-9]/g, "");
             let remove = allTasks.splice(taskIndex, 1);
-            console.log(`${remove} is gone`);
             updateStorage(allTasks, "tasks");
             console.table(allTasks);
             updateTaskTable(allTasks);
@@ -285,7 +345,7 @@ const switchButton = (switchButton) => {
 
 // function to sort tasks by date
 const sortDate = () => {
-    const taskTable = document.getElementById("task-table");
+    const taskList = document.getElementById("task-list");
     let switching = true;
     let shouldSwitch = false;
     let x;
@@ -293,11 +353,11 @@ const sortDate = () => {
     let i = 1;
     while (switching) {
         switching = false;
-        let rows = taskTable.rows;
-        for (i = 1; i < (rows.length-1); i++) {
+        let cards = taskList.childNodes;
+        for (i = 1; i < (cards.length-1); i++) {
             shouldSwitch = false;
-            x = rows[i].getElementsByTagName("td")[2].innerHTML;
-            y = rows[i+1].getElementsByTagName("td")[2].innerHTML;
+            x = cards[i].childNodes[1].childNodes[2].innerText;
+            y = cards[i+1].childNodes[1].childNodes[2].innerText;
             if (compareAsc(parseISO(x), parseISO(y)) === 1) {
                 shouldSwitch = true;
                 break;
@@ -305,7 +365,7 @@ const sortDate = () => {
 
         };
         if (shouldSwitch) {
-            rows[i].parentNode.insertBefore(rows[i+1], rows[i]);
+            cards[i].parentNode.insertBefore(cards[i+1], cards[i]);
             switching = true;
         };
 
@@ -320,11 +380,11 @@ const sortDate = () => {
 
 
 checkStorage();
-console.table(projectList);
 addTask();
+console.table(projectList);
 updateProjectList(projectList);
 updateTaskTable(allTasks);
 updateSortEvents();
 
-export {currentProject, projectList};
+export {currentProject, projectList, today};
 export {updateTaskEvents, updateProjectEvents, sortDate};

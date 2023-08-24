@@ -1,10 +1,12 @@
 //import updateProjectList from functionalDOM.js;
-import { updateTaskEvents, updateProjectEvents, projectList, currentProject, sortDate, dateCutOff } from "./index";
+import { updateTaskEvents, updateProjectEvents, projectList, currentProject, sortDate, dateCutOff, today } from "./index";
 import CheckCircleOutline from "./Images/check-circle-outline.svg"
 import CircleEditOutline from "./Images/circle-edit-outline.svg"
 import CircleOutline from "./Images/circle-outline.svg"
 import DeleteCircleOutline from "./Images/delete-circle-outline.svg"
 import DotsVertical from "./Images/dots-vertical.svg"
+import PlusCircleOutline from "./Images/plus-circle-outline.svg";
+import ExpandTask from "./Images/magnify-expand.svg"
 import { compareAsc, format, parseISO } from "date-fns";
 
 export default function loadpage() {
@@ -35,9 +37,9 @@ const buildSidebar = () => {
     sortOptions.setAttribute("class", "sort-options")
     sortOptions.innerHTML = `
         <h2>Sorting</h2>
-        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-three"></div><h3>Upcoming 3 Days</h3>
-        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-seven"></div><h3>Upcoming Week</h3>
-        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-priority"></div><h3>High Priority</h3>`
+        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-three"><h3>Upcoming 3 Days</h3></div>
+        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-seven"><h3>Upcoming Week</h3></div>
+        <div class="sort-tasks"><img src="${CircleOutline}" id="sort-priority"><h3>High Priority</h3></div>`
     const projOptions = document.createElement("div");
     projOptions.setAttribute("class", "project-options")
     const projectHeading = document.createElement("h2");
@@ -49,14 +51,12 @@ const buildSidebar = () => {
     defaultProject.setAttribute("id", "project-check0");
     defaultProject.innerHTML = `
         <img src="${CheckCircleOutline}" id="default-check"> <h3>All Tasks</h3>`;
-    const projectAdd = document.createElement('div');
-    projectAdd.setAttribute("class", "project-add");
-    projectAdd.setAttribute("id", "project-add");
-    const addButton = document.createElement("div");
-    addButton.setAttribute('class', 'add-project');
-    addButton.setAttribute('id', 'add-project');
-    addButton.innerHTML = "+";
-    projectAdd.innerHTML = "Add new project:";
+    const addProject = document.createElement("div");
+    addProject.setAttribute('class', 'add-project');
+    addProject.setAttribute('id', 'add-project');
+    addProject.innerHTML = `
+        <div class="add-card project"><img src="${PlusCircleOutline}"><h3>Add Project</h3></div>
+        `;
     const projectList = document.createElement("div");
     projectList.setAttribute("class", "project-list");
     projectList.setAttribute("id", "project-list");
@@ -64,17 +64,12 @@ const buildSidebar = () => {
     projOptions.appendChild(projectHeading);
     projOptions.appendChild(defaultProject);
     projOptions.appendChild(projectList);
-    projOptions.appendChild(projectAdd);
-    projectAdd.appendChild(addButton);
     sidebar.appendChild(projOptions);    
+    sidebar.appendChild(addProject);
 }
 
 //move this to a "functionality" page rather than build
 const updateProjectList = (projectList) => {
-    if (projectList.length === 0) {
-        return;
-    }
-
     if (currentProject === 0) {
         const defaultCheck = document.getElementById("default-check");
         defaultCheck.setAttribute('src', `${CheckCircleOutline}`);
@@ -83,15 +78,26 @@ const updateProjectList = (projectList) => {
     while (projects.hasChildNodes()) {
         projects.removeChild(projects.firstChild);
     }
+    if (projectList.length === 0) {
+        return;
+    }
     const renderProjects = document.createElement('ul');
     renderProjects.setAttribute("class", "render-projects");  
     projectList.forEach((project, x) => {
         let li = document.createElement('li');
         if (project.id === currentProject) {
-            li.innerHTML = `<img class="project-check active" id="project-check${project.id}" src=${CheckCircleOutline}></img><div>${project.name}</div> <div class="project-option active ${x}"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
+            li.innerHTML = `
+            <img class="project-check active ${x}" id="project-check${project.id}" src=${CheckCircleOutline}></img>
+            <div><h4>${project.name}</h4><input type="text" class="project-new-name" id="project-new-name${x}" style="display:none"></div>
+            <div class="rename-project" id="rename-project${x}"><img src="${CircleEditOutline}"></div>
+            <div class="delete-project" id="delete-project${x}"><img src="${DeleteCircleOutline}"></div>`;
         }
         else {
-            li.innerHTML = `<img class="project-check inactive" id="project-check${project.id}" src=${CircleOutline}><div>${project.name}</div> <div class="project-option inactive"><div class="rename-project" id="rename-project${x}">Rename</div><div class="delete-project" id="delete-project${x}">Delete</div></div>`;
+            li.innerHTML = `
+            <img class="project-check inactive ${x}" id="project-check${project.id}" src=${CircleOutline}>
+            <div><h4>${project.name}</h4><input type="text" class="project-new-name" id="project-new-name${x}" style="display:none"></div>
+            <div class="rename-project" id="rename-project${x}"><img src="${CircleEditOutline}"></div>
+            <div class="delete-project" id="delete-project${x}"><img src="${DeleteCircleOutline}"></div>`;
         }
         renderProjects.appendChild(li);
     });
@@ -100,6 +106,7 @@ const updateProjectList = (projectList) => {
 }
 
 const buildContainer = () => {
+    buildProjectForm();
     buildTaskForm();
     buildTaskList();
      
@@ -116,54 +123,60 @@ const buildTaskForm = () => {
     taskForm.innerHTML = `
     <label for="task">Task</label><input id="task"></input>
     <label for="description">Description</label><input id="description"></input>
-    <label for="due-date">Due Date</label><input type="date" id="due-date"></input>
+    <label for="due-date">Due Date</label><input type="date" id="due-date" value="${today}"></input>
     <label for="priority">Priority</label><select id="priority" name="priority"><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select>
-    <button type="submit" for="task-form">Add Task</button>`;
+    <button type="submit" for="task-form">Save Task</button>`;
 
     container.appendChild(taskForm);
 }
 
+const buildProjectForm = () => {
+    const container = document.getElementById("container");
+    const projectForm = document.createElement('form');
+    projectForm.setAttribute("id", "project-form");
+    projectForm.setAttribute("name", "project-form")
+    projectForm.setAttribute("class", "project-form");
+    projectForm.style.display = "none";
+    projectForm.innerHTML = `
+        <label for="project">New project name:</label><input id="project"></input> 
+        <button type="submit" for="task-form">Save Project</button>`;
+    container.appendChild(projectForm);
+}
+
 const buildTaskList = () => {
     const container = document.getElementById("container");
-    const addTask = document.createElement("button");
+    const taskHeading = document.createElement("h1");
+    taskHeading.setAttribute("class", "task-heading");
+    taskHeading.setAttribute("id", "task-heading");
+    taskHeading.innerText = "All Tasks";
+    const addTask = document.createElement("div");
     const taskList = document.createElement("div");
     taskList.setAttribute("class", "task-list");
     taskList.setAttribute("id", "task-list");
     addTask.setAttribute("id", "add-task");
-    addTask.innerHTML = "Add Task";
-    container.appendChild(addTask);
+    addTask.innerHTML = `
+        <div class="add-card task"><img src="${PlusCircleOutline}"><h3>Add Task</h3></div>
+        `;
+    container.appendChild(taskHeading);
     container.appendChild(taskList);
-    const taskTable = document.createElement("table");
-    taskTable.setAttribute("id", "task-table");
-    taskTable.innerHTML = `
-        <thead>
-        <tr>
-            <th>Task</th>
-            <th>Description</th>
-            <th>Date Due</th>
-            <th>Priority</th>
-            <th>Complete?</th>
-        </tr>
-        </thead>`;
-        container.appendChild(taskTable);
-    const tableBody = document.createElement("tbody");
-    tableBody.setAttribute("class", "table-body");
-    tableBody.setAttribute("id", "table-body");
-    taskTable.appendChild(tableBody);
+    container.appendChild(addTask);
+    
 }
 
 const updateTaskTable = (allTasks, dateCutOff, sortPriority) => {
-    const tableBody = document.getElementById("table-body");
-    while (tableBody.hasChildNodes()) {  
-        tableBody.removeChild(tableBody.firstChild);
+    const taskList = document.getElementById("task-list");
+    while (taskList.hasChildNodes()) {  
+        taskList.removeChild(taskList.firstChild);
     };  
     for (let x = 0; x < allTasks.length; x++) {
         if (currentProject === allTasks[x].projectID  || currentProject === 0) {
-            const row = document.createElement("tr");
+            const taskCard = document.createElement("div");
             let date = format(parseISO(allTasks[x].dueDate), "yyyy-MM-dd");
             let complete = `<img src="${CircleOutline}" class="complete-button" id="complete-button${x}">`;
             switch (allTasks[x].complete) {
-                case true: complete = `<img src="${CheckCircleOutline}" class="complete-button" id="complete-button${x}">`; break;
+                case true: 
+                complete = `<img src="${CheckCircleOutline}" class="complete-button active" id="complete-button${x}">`; 
+                break;
                 //case false: complete = `<img src="${CircleOutline}"`; break;
             }
 
@@ -174,15 +187,12 @@ const updateTaskTable = (allTasks, dateCutOff, sortPriority) => {
 
             }
             else {
-                row.innerHTML = `
-                <td>${allTasks[x].task}</td>
-                <td>${allTasks[x].description}</td>
-                <td>${date}</td>
-                <td>${allTasks[x].priority}</td>
-                <td>${complete}</td>
-                <td><div><img src="${DotsVertical}" class="task-selection" id="task-selection${x}"><div class="task-select" id="task-select${x}" style="display:none"><div class="edit-button" id="edit${x}"><img src=${CircleEditOutline}></div><div class="delete-button" id="delete${x}"><img src=${DeleteCircleOutline}></div></div></div></td>
+                taskCard.setAttribute("class", `card ${allTasks[x].priority}`);
+                taskCard.innerHTML = `
+                <div class="task-card-left">${complete}<h3 class="task-title">${allTasks[x].task}</h3><h4>${allTasks[x].description}<h4><h3 class="task-due">${date}</h3></div> 
+                <div class="task-card-right"><div class="edit-button" id="edit${x}"><img src=${CircleEditOutline}></div><div class="delete-button" id="delete${x}"><img src=${DeleteCircleOutline}></div></div>
                 `;
-            tableBody.appendChild(row);
+            taskList.appendChild(taskCard);
             }
 
         }
