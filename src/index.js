@@ -37,6 +37,8 @@ let sortPriority = false;
 let daysToAdd = 10000;
 let dateCutOff = 0;
 let today = format(new Date(), "yyyy-MM-dd");
+let newTask = true;
+let editIndex = 0;
 
 const calcDateCut = () => {
     dateCutOff = addDays(new Date(), daysToAdd);
@@ -102,19 +104,34 @@ const taskForm = document.getElementById("task-form");
 taskForm.addEventListener('submit', (e) => {
     e.preventDefault();
     checkStorage();
-    let projectID = currentProject;
-    let task = e.target[0].value;
-    let description = e.target[1].value;
-    let dueDate = e.target[2].value;
-    let priority = e.target[3].value;
+
+    let task = e.target[1].value;
+    let description = e.target[2].value;
+    let dueDate = e.target[3].value;
+    let priority = e.target[4].value;
     let complete = false;
-    allTasks.push(new Task(projectID, task, description, dueDate, priority, complete));
+    if (newTask === true) {
+        let projectID = currentProject;
+        allTasks.push(new Task(projectID, task, description, dueDate, priority, complete));
+    }
+    else if (newTask === false) {
+        allTasks[editIndex].projectID = +e.target[0].value;
+        allTasks[editIndex].task = task;
+        allTasks[editIndex].description = description;
+        allTasks[editIndex].dueDate = dueDate;
+        allTasks[editIndex].priority = priority;
+        
+        newTask = true;
+    }
     updateStorage(allTasks, "tasks");
     updateTaskTable(allTasks, dateCutOff);
     updateTaskEvents();
     grayout('display: none');
     switchButton('task-form');
+
+
 });
+
 
 // add project pop-up form
 const projectForm = document.getElementById("project-form");
@@ -287,23 +304,40 @@ const updateSortEvents = () => {
     });
 }
 
+const updateTaskFormFields = (projectID, task, description, dueDate, priority) => {
+    const taskField = document.querySelector(".task-form")
+    console.log(taskField.elements);
+    let priorityIndex = 2;
+    switch(priority) {
+        case "high": priorityIndex = 0; break;
+        case "medium": priorityIndex = 1; break;
+        case "low": priorityIndex = 2; break;
+    }
+    taskField.elements[0].setAttribute("value", projectID);
+    taskField.elements[1].setAttribute("value", task);
+    taskField.elements[2].setAttribute("value", description);
+    taskField.elements[3].setAttribute("value", dueDate);
+    taskField.elements[4][priorityIndex].setAttribute("selected", true);
+};
 
 //add event listner add task
-const addTask = () => {
-    const addTaskButton = document.getElementById("add-task")
-    
+function addTask() {
+    const addTaskButton = document.getElementById("add-task");
+
     addTaskButton.addEventListener('click', () => {
+        updateTaskFormFields(currentProject, "", "", today, "low");
         grayout('display: inline');
         switchButton("task-form");
     });
 }
 
 const updateTaskHeading = (heading) => {
-    console.log(heading);
     let taskHeading = document.getElementById("task-heading");
     taskHeading.innerText = heading;
 
 };
+
+
 
 //add event listener delete task
 const updateTaskEvents = () => {
@@ -317,6 +351,18 @@ const updateTaskEvents = () => {
             //finishedTask.setAttribute("src", `${CheckCircleOutline}`)
         })
     })
+
+    const editTask = document.querySelectorAll(".edit-button");
+    editTask.forEach(edit => {
+        edit.addEventListener('click', (e) => {
+            let taskIndex = e.currentTarget.id.replace(/[^0-9]/g, "");
+            updateTaskFormFields(allTasks[taskIndex].projectID, allTasks[taskIndex].task, allTasks[taskIndex].description, allTasks[taskIndex].dueDate, allTasks[taskIndex].priority)
+            editIndex = taskIndex;
+            newTask = false;
+            grayout('display: inline');
+            switchButton("task-form");
+        })
+    });
 
     const deleteButton = document.querySelectorAll(".delete-button");
     deleteButton.forEach(deleteTask => {
@@ -353,11 +399,12 @@ const sortDate = () => {
     let i = 1;
     while (switching) {
         switching = false;
+        console.log("Switching")
         let cards = taskList.childNodes;
-        for (i = 1; i < (cards.length-1); i++) {
+        for (i = 0; i < (cards.length-1); i++) {
             shouldSwitch = false;
-            x = cards[i].childNodes[1].childNodes[2].innerText;
-            y = cards[i+1].childNodes[1].childNodes[2].innerText;
+            x = cards[i].childNodes[1].childNodes[4].innerText;
+            y = cards[i+1].childNodes[1].childNodes[4].innerText;
             if (compareAsc(parseISO(x), parseISO(y)) === 1) {
                 shouldSwitch = true;
                 break;
@@ -365,6 +412,7 @@ const sortDate = () => {
 
         };
         if (shouldSwitch) {
+            console.log("switch");
             cards[i].parentNode.insertBefore(cards[i+1], cards[i]);
             switching = true;
         };
@@ -382,6 +430,7 @@ const sortDate = () => {
 checkStorage();
 addTask();
 console.table(projectList);
+console.table(allTasks)
 updateProjectList(projectList);
 updateTaskTable(allTasks);
 updateSortEvents();

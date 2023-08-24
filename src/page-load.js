@@ -121,6 +121,7 @@ const buildTaskForm = () => {
     taskForm.style.display = "none";
     //taskForm elements below: task, description, due-date, priority, ("completed" not neccessary for entry)
     taskForm.innerHTML = `
+    <input id="projectID" hidden></input>
     <label for="task">Task</label><input id="task"></input>
     <label for="description">Description</label><input id="description"></input>
     <label for="due-date">Due Date</label><input type="date" id="due-date" value="${today}"></input>
