@@ -45,7 +45,6 @@ const calcDateCut = () => {
 }
 
 calcDateCut();
-console.log(dateCutOff)
 
 //update localstorage
 const updateStorage = (array, storage) => {
@@ -95,7 +94,6 @@ let allTasks = [];
 
 const grayout = (displayType) => {
     const grayout = document.getElementById("grayout");
-    console.log(grayout);
     grayout.setAttribute("style", `${displayType}`);
 }
 
@@ -137,7 +135,6 @@ taskForm.addEventListener('submit', (e) => {
 const projectForm = document.getElementById("project-form");
 projectForm.addEventListener("submit", (e) => {
     let projectName = e.target[0].value;
-    console.log(projectName);
     currentProject = projectCounter;
     projectList.push(new Project(projectCounter, projectName));
     updateStorage(projectList, "projectList");
@@ -164,16 +161,13 @@ const projectRename = (projIndex) => {
 
 const removeTasks = (projectID) => {
     for (let x = 0; x < allTasks.length; x++) {
-        console.log(x);
         if (allTasks[x].projectID === projectID) {
             let remove = allTasks.splice(x, 1);
-            console.log(x);
             x -= 1;
         }
     }
     currentProject = 0;
     updateStorage(allTasks, "tasks");
-    console.table(allTasks);
     updateTaskTable(allTasks);
 }
 
@@ -214,7 +208,6 @@ function updateProjectEvents() {
         selProj.addEventListener('click', (e) => {
             let projID = e.currentTarget.id.replace(/[^0-9]/g, "");
             let projIndex = e.currentTarget.className.replace(/[^0-9]/g, "");
-            console.log(e.currentTarget.className);
             if (+projID === 0) {
                 updateTaskHeading("All Tasks");
             }
@@ -292,7 +285,6 @@ const updateSortEvents = () => {
     const sortTask = document.querySelectorAll(".sort-tasks")
     sortTask.forEach(filter => {
         filter.addEventListener('click', (e) =>{
-            console.log(e.target.id);
             switch(e.target.id) {
                 case "sort-three": sortThree(); break;
                 case "sort-seven": sortSeven(); break;
@@ -306,7 +298,6 @@ const updateSortEvents = () => {
 
 const updateTaskFormFields = (projectID, task, description, dueDate, priority) => {
     const taskField = document.querySelector(".task-form")
-    console.log(taskField.elements);
     let priorityIndex = 2;
     switch(priority) {
         case "high": priorityIndex = 0; break;
@@ -370,7 +361,6 @@ const updateTaskEvents = () => {
             let taskIndex = e.currentTarget.id.replace(/[^0-9]/g, "");
             let remove = allTasks.splice(taskIndex, 1);
             updateStorage(allTasks, "tasks");
-            console.table(allTasks);
             updateTaskTable(allTasks);
             e.stopPropagation();
         });
@@ -379,7 +369,6 @@ const updateTaskEvents = () => {
 
 // switch taskForm display
 const switchButton = (switchButton) => {
-    console.log(switchButton);
     const switchView = document.getElementById(switchButton);
     if (switchView.style.display === "grid") {
         switchView.style.display = "none";
@@ -399,7 +388,6 @@ const sortDate = () => {
     let i = 1;
     while (switching) {
         switching = false;
-        console.log("Switching")
         let cards = taskList.childNodes;
         for (i = 0; i < (cards.length-1); i++) {
             shouldSwitch = false;
@@ -412,7 +400,6 @@ const sortDate = () => {
 
         };
         if (shouldSwitch) {
-            console.log("switch");
             cards[i].parentNode.insertBefore(cards[i+1], cards[i]);
             switching = true;
         };
