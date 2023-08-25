@@ -134,12 +134,15 @@ taskForm.addEventListener('submit', (e) => {
 // add project pop-up form
 const projectForm = document.getElementById("project-form");
 projectForm.addEventListener("submit", (e) => {
+    e.preventDefault();
     let projectName = e.target[0].value;
     currentProject = projectCounter;
+    console.log(currentProject);
     projectList.push(new Project(projectCounter, projectName));
     updateStorage(projectList, "projectList");
     updateProjectList(projectList);
-    grayout();
+    grayout('display: none');
+    switchButton('project-form');
 })
 
 // rename project pop-up form
