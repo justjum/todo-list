@@ -172,10 +172,13 @@ const removeTasks = (projectID) => {
 }
 
 const checkStorage = () => {
-    if (localStorage.getItem("tasks") !== "undefined") {
+    if (localStorage.getItem("tasks") !== null) {
         allTasks = JSON.parse(localStorage.getItem("tasks"));
         return;
     } 
+    else {
+        allTasks = [];
+    }
 };
 
 
