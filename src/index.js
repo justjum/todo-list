@@ -46,6 +46,9 @@ const calcDateCut = () => {
 
 calcDateCut();
 
+// Array to store task objects
+let allTasks = [];
+
 //update localstorage
 const updateStorage = (array, storage) => {
     let string = JSON.stringify(array);
@@ -78,16 +81,13 @@ const loadProjectCounter =() => {
     return projectCounter;
 }
 
-
-
 loadProjectCounter();
-loadProjectList();
 
 
 
 
-// Array to store task objects
-let allTasks = [];
+
+
 
 // Shortcut to reset task array
 //updateStorage(allTasks, 'tasks');
