@@ -54,7 +54,7 @@ const updateStorage = (array, storage) => {
 
 const loadProjectList = () => {
     projectList = JSON.parse(localStorage.getItem("projectList"));
-    if (projectList.length === 0) {   
+    if (projectList.length === null) {   
         projectList = [];
         updateStorage(projectList, "projectList");
     }
